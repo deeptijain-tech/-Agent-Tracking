@@ -22,7 +22,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }
         
-        /* 3D Card Effect */
         .card-3d { 
             background: #ffffff;
             border-radius: 16px; 
@@ -33,7 +32,6 @@
             transition: transform 0.2s ease;
         }
 
-        /* 3D Inner Elements */
         .inner-3d {
             background: #f8fafc;
             border-radius: 12px;
@@ -70,7 +68,6 @@
         }
         .search-input:focus { border-color: #f59e0b; }
 
-        /* 3D Button */
         .btn-3d {
             background: linear-gradient(135deg, #ea580c 0%, #f59e0b 100%);
             border-bottom: 4px solid #c2410c;
@@ -97,7 +94,6 @@
     <div class="header-bg text-white mb-6 relative z-10 border-b-[4px] border-[#0f172a]">
         <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
             <div class="flex items-center gap-3">
-                <!-- Circular Icon Logo -->
                 <div class="bg-white rounded-full shadow h-11 w-11 flex items-center justify-center p-1.5 border border-slate-200">
                     <svg viewBox="0 0 100 100" class="w-full h-full">
                         <circle cx="50" cy="50" r="45" fill="#0284c7"/>
@@ -112,16 +108,13 @@
                 </div>
             </div>
             
-            <!-- Filters Header (Shown on Page 2) -->
             <div id="headerFilters" class="hidden flex flex-wrap items-center gap-2">
                 <select id="dateSelect" class="filter-select text-xs">
                     <option value="ALL">📅 All Dates</option>
                 </select>
                 
-                <!-- Initials Search Input -->
                 <input type="text" id="agentSearchInput" placeholder="🔍 Search (e.g. RO)" class="search-input text-xs">
 
-                <!-- Agent Dropdown -->
                 <select id="agentSelect" class="filter-select text-xs max-w-[200px]">
                     <option value="ALL">👤 Select Agent</option>
                 </select>
@@ -139,7 +132,6 @@
         <!-- PAGE 1: Welcome Screen -->
         <div id="welcomeScreen" class="mt-8 bg-white p-6 sm:p-12 rounded-3xl shadow-[0_10px_25px_rgba(0,0,0,0.08)] max-w-xl mx-auto border border-slate-200 text-center">
             
-            <!-- M-Swasth Center Logo -->
             <div class="mb-5 flex flex-col items-center justify-center">
                 <div class="flex items-center gap-2 mb-1">
                     <svg class="w-10 h-10 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
@@ -152,7 +144,6 @@
 
             <h2 class="text-2xl font-extrabold text-[#1e3a8a] mb-6">Agent Performance Analytics</h2>
 
-            <!-- 3 Feature Boxes -->
             <div class="grid grid-cols-3 gap-3 mb-8">
                 <div class="inner-3d p-3 text-center">
                     <div class="text-xl mb-1">⏱️</div>
@@ -173,7 +164,6 @@
                 </div>
             </div>
 
-            <!-- Upload Button -->
             <div class="flex flex-col items-center gap-3">
                 <label for="welcomeCsvInput" class="btn-3d text-white font-extrabold py-3 px-8 rounded-xl cursor-pointer text-base flex items-center justify-center gap-2 w-full sm:w-auto shadow-md">
                     📁 Upload Daily CSV to Start
@@ -186,7 +176,6 @@
         <!-- PAGE 2: Dashboard Screen -->
         <div id="dashboardScreen" class="hidden space-y-5">
             
-            <!-- Performance Report Header Card -->
             <div class="card-3d !p-4 flex items-center gap-3.5">
                 <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl">
                     👤
@@ -197,9 +186,7 @@
                 </div>
             </div>
 
-            <!-- Total Cases & First/Last Case Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Total Cases Card -->
                 <div class="card-3d !p-4 flex justify-between items-center">
                     <div>
                         <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">TOTAL CASES</div>
@@ -211,7 +198,6 @@
                     </div>
                 </div>
 
-                <!-- First & Last Case Card -->
                 <div class="card-3d !p-4 flex justify-between items-center">
                     <div>
                         <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">FIRST &amp; LAST CASE</div>
@@ -224,7 +210,6 @@
                 </div>
             </div>
 
-            <!-- Region-Wise Breakdown Card -->
             <div class="card-3d !p-5 border-l-4 border-l-emerald-500">
                 <div class="text-xs font-black text-slate-800 uppercase tracking-wider mb-4">REGION-WISE BREAKDOWN</div>
                 <div class="overflow-x-auto">
@@ -238,13 +223,11 @@
                             </tr>
                         </thead>
                         <tbody id="regionTableBody" class="divide-y divide-slate-100 font-semibold text-slate-700">
-                            <!-- Injected dynamically -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Total Break Time Card -->
             <div class="card-3d !p-5">
                 <div class="flex justify-between items-start mb-4">
                     <div>
@@ -254,11 +237,9 @@
                     <div id="totalBreakTimeDisplay" class="text-2xl font-black text-slate-800">0 min</div>
                 </div>
                 <div id="breakTimelineContainer" class="space-y-3 pt-2">
-                    <!-- Break rows injected dynamically -->
                 </div>
             </div>
 
-            <!-- Longest EMRs (> 30M) Card -->
             <div class="card-3d !p-5">
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center gap-2">
@@ -271,7 +252,6 @@
                 </div>
 
                 <div id="longestEmrList" class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-                    <!-- Long EMR cards injected dynamically -->
                 </div>
             </div>
 
@@ -318,12 +298,10 @@
             });
         }
 
-        // Parse and clean all rows without dropping names like Rajni(NA)
         function processData(data) {
             rawRows = data.map((row, idx) => {
                 const keys = Object.keys(row);
                 
-                // Flexible match for columns
                 const agentKey = keys.find(k => /agent/i.test(k) || /med.*agent/i.test(k) || /pharma/i.test(k) || /operator/i.test(k)) || keys.find(k => /name/i.test(k)) || keys[0];
                 const dateKey = keys.find(k => /date/i.test(k) || /created/i.test(k) || /time/i.test(k));
                 const timeKey = keys.find(k => /time/i.test(k) || /start/i.test(k) || /created/i.test(k));
@@ -332,16 +310,13 @@
                 const emrKey = keys.find(k => /emr/i.test(k) || /id/i.test(k) || /ticket/i.test(k) || /case/i.test(k));
                 const tatKey = keys.find(k => /tat/i.test(k) || /duration/i.test(k) || /total.*time/i.test(k));
 
-                // Clean Agent name (NEVER filter out (NA))
                 let agent = row[agentKey] !== undefined && row[agentKey] !== null ? String(row[agentKey]).trim() : '';
                 if (!agent || agent.toLowerCase() === 'null' || agent.toLowerCase() === 'undefined') {
                     agent = 'Unknown Agent';
                 }
 
-                // Date
                 let dateStr = row[dateKey] ? String(row[dateKey]).trim().split(' ')[0] : 'All Dates';
 
-                // Case type: CP vs CLINIC
                 let caseType = 'CLINIC';
                 if (typeKey && row[typeKey]) {
                     const t = String(row[typeKey]).toUpperCase();
@@ -350,20 +325,14 @@
                     caseType = 'CP';
                 }
 
-                // Region
                 let region = regionKey && row[regionKey] ? String(row[regionKey]).trim() : 'General';
-
-                // EMR ID
                 let emr = emrKey && row[emrKey] ? String(row[emrKey]).trim() : `EMR-${idx + 1000}`;
-
-                // Timestamp for breaks & timeline
                 let timeVal = row[timeKey] ? String(row[timeKey]).trim() : '';
                 let timestamp = parseTimeToMinutes(timeVal, idx);
 
-                // TAT
                 let tat = tatKey && row[tatKey] ? parseInt(row[tatKey], 10) : 0;
                 if (isNaN(tat) || tat <= 0) {
-                    tat = 10 + (idx % 25); // Fallback realistic TAT if column missing
+                    tat = 10 + (idx % 25);
                 }
 
                 return {
@@ -383,7 +352,7 @@
         }
 
         function parseTimeToMinutes(str, fallbackIdx) {
-            if (!str) return 9 * 60 + (fallbackIdx * 4); // 9:00 AM onwards fallback
+            if (!str) return 9 * 60 + (fallbackIdx * 4);
             const match = str.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
             if (match) {
                 let h = parseInt(match[1], 10);
@@ -410,11 +379,9 @@
             dashboardScreen.classList.remove('hidden');
             headerFilters.classList.remove('hidden');
 
-            // Populate Dates
             const dates = Array.from(new Set(rawRows.map(r => r.date))).filter(Boolean);
             dateSelect.innerHTML = '<option value="ALL">📅 All Dates</option>' + dates.map(d => `<option value="${d}">${d}</option>`).join('');
 
-            // Populate ALL Agents without missing any (e.g. Rajni(NA))
             allUniqueAgents = Array.from(new Set(rawRows.map(r => r.agent)))
                                    .filter(name => name.length > 0)
                                    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
@@ -441,7 +408,6 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Real-time search filter by initials (e.g. typing "RO" filters "Roshni", etc.)
         agentSearchInput.addEventListener('input', function(e) {
             const query = e.target.value.trim().toLowerCase();
             let filtered;
@@ -464,17 +430,14 @@
             const curDate = dateSelect.value;
             const curAgent = agentSelect.value;
 
-            // Filter data
             const data = rawRows.filter(r => {
                 const dateOk = (curDate === 'ALL' || r.date === curDate);
                 const agentOk = (curAgent === 'ALL' || r.agent === curAgent);
                 return dateOk && agentOk;
             });
 
-            // Update Banner
             document.getElementById('agentBannerName').innerText = (curAgent === 'ALL') ? 'All Active Agents' : curAgent;
 
-            // 1. Total Cases & CP / Clinic
             const totalCases = data.length;
             const cpCases = data.filter(r => r.caseType === 'CP').length;
             const clinicCases = totalCases - cpCases;
@@ -483,7 +446,6 @@
             document.getElementById('cpCountDisplay').innerText = cpCases;
             document.getElementById('clinicCountDisplay').innerText = clinicCases;
 
-            // 2. First & Last Case Timeline
             if (data.length > 0) {
                 const sortedByTime = [...data].sort((a, b) => a.timestamp - b.timestamp);
                 const first = formatMinutesToTime(sortedByTime[0].timestamp);
@@ -493,7 +455,6 @@
                 document.getElementById('caseTimingDisplay').innerText = `-- : --`;
             }
 
-            // 3. Region-Wise Breakdown
             const regionMap = {};
             data.forEach(r => {
                 if (!regionMap[r.region]) {
@@ -523,7 +484,6 @@
                 });
             }
 
-            // 4. Break Time (Gaps > 15 minutes)
             const breakContainer = document.getElementById('breakTimelineContainer');
             breakContainer.innerHTML = '';
             let totalBreakMins = 0;
@@ -532,7 +492,7 @@
                 const sorted = [...data].sort((a, b) => a.timestamp - b.timestamp);
                 for (let i = 0; i < sorted.length - 1; i++) {
                     const gap = sorted[i + 1].timestamp - sorted[i].timestamp;
-                    if (gap >= 15 && gap <= 300) { // Valid gap between 15m and 5 hrs
+                    if (gap >= 15 && gap <= 300) {
                         totalBreakMins += gap;
                         const start = formatMinutesToTime(sorted[i].timestamp);
                         const end = formatMinutesToTime(sorted[i + 1].timestamp);
@@ -563,7 +523,6 @@
             const tbMins = totalBreakMins % 60;
             document.getElementById('totalBreakTimeDisplay').innerText = tbHours > 0 ? `${tbHours} hr ${tbMins} min` : `${tbMins} min`;
 
-            // 5. Longest EMRs (> 30M)
             const longestList = document.getElementById('longestEmrList');
             longestList.innerHTML = '';
 
