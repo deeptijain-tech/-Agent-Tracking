@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1e3a8a">
+    <title>M-Swasth Agent Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- SheetJS added for .xlsx and .xls support -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    
+    <style>
+        body { 
+            background-color: #e2e8f0; 
+            color: #1e293b; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            min-height: 100vh;
+        }
+        .header-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        /* 3D Card Effect */
+        .card-3d { 
+            background: linear-gradient(145deg, #ffffff, #f1f5f9);
+            border-radius: 16px; 
+            padding: 24px; 
+            box-shadow: 8px 8px 16px #cbd5e1, -8px -8px 16px #ffffff;
+            border: 1px solid #e2e8f0;
+            border-bottom: 5px solid #cbd5e1;
+            border-right: 2px solid #cbd5e1;
+            transition: transform 0.2s ease;
+        }
+        .card-3d:hover {
+            transform: translateY(-2px);
+        }
+
+        /* 3D Inner Elements */
+        .inner-3d {
+            background: #f8fafc;
+            box-shadow: inset 4px 4px 8px #cbd5e1, inset -4px -4px 8px #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .accent-orange { color: #ea580c; }
+        .bg-accent-orange { background: linear-gradient(135deg, #ea580c 0%, #f59e0b 100%); }
+        .accent-blue { color: #1e3a8a; }
+
+        .filter-select { 
+            background-color: #ffffff; 
+            color: #1e293b; 
+            border: 2px solid #cbd5e1; 
+            border-bottom: 4px solid #94a3b8;
+            border-radius: 10px; 
+            padding: 12px 16px; 
+            outline: none; 
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 1.1rem;
+            min-width: 180px;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.05);
+            transition: all 0.1s;
+        }
+        .filter-select:active {
+            border-bottom: 2px solid #94a3b8;
+            transform: translateY(2px);
+        }
+        .filter-select:focus { border-color: #f59e0b; }
+
+        /* 3D Button */
+        .btn-3d {
+            background: linear-gradient(135deg, #ea580c 0%, #f59e0b 100%);
+            border-bottom: 4px solid #c2410c;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.1s;
+        }
+        .btn-3d:active {
+            border-bottom: 0px solid #c2410c;
+            transform: translateY(4px);
+        }
+
+        /* 3D Text Shadow */
+        .text-3d {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.15);
+        }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body class="pb-12">
+    <!-- Header -->
+    <div class="header-bg text-white mb-8 relative z-10 border-b-[6px] border-[#0f172a]">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="bg-white rounded-full shadow-[4px_4px_10px_rgba(0,0,0,0.3)] overflow-hidden h-14 w-14 border-2 border-slate-200 flex items-center justify-center font-black text-blue-900 text-xl">
+                    M
+                </div>
+                <div>
+                    <h1 class="text-3xl font-extrabold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-200 text-3d">Analytics <span class="text-yellow-400">Pro</span></h1>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap items-center justify-center gap-4">
+                <div id="filtersContainer" class="hidden flex gap-4">
+                    <select id="dateSelect" class="filter-select"></select>
+                    <select id="agentSelect" class="filter-select"></select>
+                </div>
+                <!-- Header Upload Button -->
+                <div id="headerUploadBtn" class="hidden">
+                    <label for="csvFileInput" class="btn-3d text-white px-6 py-2.5 rounded-xl cursor-pointer font-extrabold block text-base border border-orange-400">
+                        📁 Upload File
+                    </label>
+                    <input type="file" id="csvFileInput" accept=".csv, .xlsx, .xls" class="hidden">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 md:px-6 relative z-0">
+        
+        <!-- Welcome Screen -->
+        <div id="welcomeScreen" class="text-center mt-12 bg-white p-8 md:p-16 rounded-3xl shadow-[8px_8px_16px_#cbd5e1,_-8px_-8px_16px_#ffffff] max-w-3xl mx-auto border border-slate-200 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-blue-50 to-transparent"></div>
+            
+            <div class="relative z-10">
+                <h2 class="text-3xl md:text-4xl font-black text-[#1e3a8a] mb-10 text-3d">Agent Performance Analytics</h2>
+
+                <!-- Feature Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <div class="inner-3d p-6 hover:-translate-y-1 transition-transform">
+                        <div class="text-4xl mb-3">⏱️</div>
+                        <div class="font-black text-slate-700 text-lg">SLA Tracking</div>
+                        <div class="text-xs text-slate-500 font-bold mt-1">Monitor >30m Cases</div>
+                    </div>
+                    <div class="inner-3d p-6 hover:-translate-y-1 transition-transform">
+                        <div class="text-4xl mb-3">☕</div>
+                        <div class="font-black text-slate-700 text-lg">Break Analysis</div>
+                        <div class="text-xs text-slate-500 font-bold mt-1">Track gaps >15m</div>
+                    </div>
+                    <div class="inner-3d p-6 hover:-translate-y-1 transition-transform">
+                        <div class="text-4xl mb-3">📊</div>
+                        <div class="font-black text-slate-700 text-lg">3D Reports</div>
+                        <div class="text-xs text-slate-500 font-bold mt-1">Visual insights</div>
+                    </div>
+                </div>
+
+                <!-- Main Upload Button -->
+                <label for="csvFileInputMain" class="btn-3d text-white px-8 py-5 rounded-2xl cursor-pointer font-black block text-xl border-2 border-orange-400 w-full md:w-3/4 mx-auto shadow-lg hover:shadow-xl">
+                    📁 Upload CSV or Excel (.xlsx, .xls)
+                </label>
+                <input type="file" id="csvFileInputMain" accept=".csv, .xlsx, .xls" class="hidden">
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboard" class="hidden">
+            <!-- Dynamic Agent Header -->
+            <div id="agentHeaderBlock" class="mb-8 flex items-center gap-5 card-3d inline-block">
+                <span id="agentAvatar" class="text-5xl inner-3d p-4 rounded-2xl flex items-center justify-center">👤</span>
+                <div>
+                    <h2 class="text-sm text-slate-500 font-extrabold uppercase tracking-widest drop-shadow-sm">Performance Report For</h2>
+                    <h1 id="agentNameDisplay" class="text-2xl font-black text-[#1e3a8a] text-3d mt-1">Agent Name</h1>
+                </div>
+            </div>
+
+            <!-- Top Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <!-- Cases Card -->
+                <div class="card-3d flex justify-between items-center border-l-[10px] border-[#1e3a8a]">
+                    <div>
+                        <div class="text-[18px] text-slate-700 font-black uppercase tracking-wider mb-2">Total Cases</div>
+                        <div class="text-4xl font-black accent-blue text-3d" id="totalCases">0</div>
+                    </div>
+                    <div class="text-right text-base inner-3d p-3 border-2 border-slate-100">
+                        <div class="mb-2">
+                            <span class="font-extrabold text-slate-600 uppercase">CP:</span> <span id="cpCount" class="font-black accent-orange text-xl drop-shadow-sm">0</span>
+                        </div>
+                        <div class="border-t-2 border-slate-200 pt-2">
+                            <span class="font-extrabold text-slate-600 uppercase">Clinic:</span> <span id="clinicCount" class="font-black accent-blue text-xl drop-shadow-sm">0</span>
+                        </div>
+                        <div id="callCountDiv" class="border-t-2 border-slate-200 pt-2 hidden">
+                            <span class="font-extrabold text-slate-600 uppercase">Call:</span> <span id="callCount" class="font-black text-green-600 text-xl drop-shadow-sm">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shift Card -->
+                <div class="card-3d flex justify-between items-center border-l-[10px] border-yellow-500 overflow-hidden">
+                    <div class="max-w-[70%]">
+                        <div class="text-[18px] text-slate-700 font-black uppercase tracking-wider mb-2">First & Last Case</div>
+                        <div class="text-2xl md:text-3xl lg:text-4xl font-black text-slate-800 mt-2 text-3d whitespace-nowrap tracking-tight" id="firstLastTime">-</div>
+                    </div>
+                    <div class="inner-3d bg-gradient-to-br from-orange-50 to-orange-100 text-orange-700 px-4 py-4 rounded-xl border border-orange-200 text-sm font-extrabold flex flex-col items-center">
+                        <svg class="w-8 h-8 mb-2 text-orange-500 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Timeline
+                    </div>
+                </div>
+            </div>
+
+            <!-- Region Breakdown -->
+            <div class="card-3d mb-10 border-l-[10px] border-emerald-600">
+                <h3 class="text-slate-800 text-[18px] font-black uppercase tracking-wider mb-4">Region-wise Breakdown</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead id="regionTableHead">
+                            <tr class="bg-slate-100 text-slate-600 uppercase text-xs font-black">
+                                <th class="p-3 rounded-tl-lg">Region Name</th>
+                                <th class="p-3 text-center">CP Cases</th>
+                                <th class="p-3 text-center">Clinic Cases</th>
+                                <th class="p-3 text-center rounded-tr-lg">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="regionTableBody" class="text-base font-extrabold text-slate-700">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Deep Dive Section -->
+            <div class="grid grid-cols-1 gap-8 mb-10">
+                <!-- Breaks Chart -->
+                <div class="card-3d flex flex-col">
+                    <div class="flex justify-between items-end border-b-4 border-slate-100 pb-4 mb-4">
+                        <div>
+                            <h3 class="text-slate-800 text-xl font-black uppercase tracking-widest text-3d">Total Break Time</h3>
+                            <p class="text-[15px] font-extrabold text-slate-500 mt-1">Gaps > 15 minutes</p>
+                        </div>
+                        <div class="text-4xl font-black text-slate-800 text-3d" id="breakTimeTotal">0 min</div>
+                    </div>
+                    <div class="flex-grow relative w-full h-[300px] inner-3d p-4">
+                        <canvas id="breakChart"></canvas>
+                        <div id="noBreakMsg" class="hidden absolute inset-0 flex items-center justify-center text-slate-500 font-black italic text-xl drop-shadow-sm">
+                            No breaks over 15 mins! 🎉
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SLA & TAT -->
+                <div class="card-3d flex flex-col">
+                    <div class="flex justify-between items-end border-b-4 border-slate-100 pb-4 mb-4">
+                        <div>
+                            <h3 class="text-slate-800 text-xl font-black uppercase tracking-widest text-3d">Longest EMRs (> 30m)</h3>
+                            <div class="mt-2 inline-block inner-3d bg-blue-50 text-blue-900 px-3 py-1.5 rounded-lg text-sm font-extrabold border border-blue-100">
+                                Avg TAT (All): <span id="avgTat" class="text-blue-700">0 min</span>
+                            </div>
+                        </div>
+                        <div class="text-4xl font-black text-red-600 text-3d" id="slaBreachTotal">0</div>
+                    </div>
+                    <ul id="slaList" class="space-y-4 overflow-y-auto pr-2 max-h-[400px] text-sm pb-2">
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="card-3d mb-12">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-black text-slate-800 uppercase tracking-wider text-3d">Hourly Case Volume</h2>
+                    <span class="text-base font-extrabold text-slate-700 inner-3d px-5 py-2">7 AM - 6 PM</span>
+                </div>
+                <div class="h-[380px] inner-3d p-4">
+                    <canvas id="hourlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        Chart.register(ChartDataLabels);
+        let rawData = [];
+        let hourlyChartInstance = null;
+        let breakChartInstance = null;
+
+        function safeDate(str) {
+            if(!str || typeof str !== 'string') return null;
+            let cleanStr = str.trim();
+            let d = new Date(cleanStr);
+            if (!isNaN(d.getTime())) return d;
+            d = new Date(cleanStr.replace(' ', 'T'));
+            if (!isNaN(d.getTime())) return d;
+            d = new Date(cleanStr.replace(/-/g, '/'));
+            if (!isNaN(d.getTime())) return d;
+            return null;
+        }
+
+        function formatAmPm(dateInput) {
+            let d = safeDate(dateInput);
+            if(!d) return 'N/A';
+            return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+
+        function diffInMins(d1_str, d2_str) {
+            let d1 = safeDate(d1_str);
+            let d2 = safeDate(d2_str);
+            if(!d1 || !d2) return 0;
+            return Math.max(0, (d2 - d1) / 1000 / 60);
+        }
+
+        function formatHoursMins(totalMins) {
+            let m = Math.round(totalMins);
+            if(m < 60) return `${m} min`;
+            let h = Math.floor(m / 60);
+            let rem = m % 60;
+            if(rem === 0) return `${h} hr`;
+            return `${h} hr ${rem} min`;
+        }
+
+        // File Handler for CSV, XLSX, XLS
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const fileName = file.name.toLowerCase();
+
+            if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const buffer = evt.target.result;
+                    const wb = XLSX.read(buffer, { type: 'array' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const sheetData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+                    parseRowsToObjects(sheetData);
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                Papa.parse(file, {
+                    header: false,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        parseRowsToObjects(results.data);
+                    }
+                });
+            }
+        }
+
+        function parseRowsToObjects(dataArray) {
+            if (!dataArray || dataArray.length < 2) return;
+
+            // Auto-detect header row index (usually index 1 or 0)
+            let headerIndex = 1;
+            for (let r = 0; r < Math.min(dataArray.length, 5); r++) {
+                let rowStr = (dataArray[r] || []).map(cell => String(cell).trim().toLowerCase()).join(' ');
+                if (rowStr.includes('med agent') || rowStr.includes('consult starttime') || rowStr.includes('consult start time')) {
+                    headerIndex = r;
+                    break;
+                }
+            }
+
+            let headers = dataArray[headerIndex];
+            let formattedData = [];
+
+            for (let i = headerIndex + 1; i < dataArray.length; i++) {
+                let row = dataArray[i];
+                if (!row || row.length === 0) continue;
+                let obj = {};
+                for (let j = 0; j < headers.length; j++) {
+                    let colHeader = headers[j] ? String(headers[j]).trim() : '';
+                    if (colHeader) {
+                        obj[colHeader] = row[j] !== undefined && row[j] !== null ? String(row[j]).trim() : '';
+                    }
+                }
+                formattedData.push(obj);
+            }
+            processData(formattedData);
+        }
+
+        document.getElementById('csvFileInput').addEventListener('change', handleFile);
+        document.getElementById('csvFileInputMain').addEventListener('change', handleFile);
+
+        function processData(data) {
+            rawData = data.filter(row => {
+                if(!row['Consult StartTime']) return false;
+                if(JSON.stringify(row).includes('2050') || JSON.stringify(row).includes('205') || JSON.stringify(row).includes('1970')) return false;
+                if(!row['Med Agent']) return false;
+                return true;
+            });
+            
+            if(rawData.length === 0) return;
+            
+            const dateSet = new Set();
+            rawData.forEach(r => {
+                let d = r['Date'];
+                if(d) dateSet.add(d);
+            });
+            const dates = Array.from(dateSet).sort();
+            
+            const dateSelect = document.getElementById('dateSelect');
+            dateSelect.innerHTML = '';
+            
+            let allOpt = document.createElement('option');
+            allOpt.value = 'All';
+            allOpt.textContent = '📅 All Dates';
+            dateSelect.appendChild(allOpt);
+            
+            dates.forEach(d => {
+                let opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = `📅 ${d}`;
+                dateSelect.appendChild(opt);
+            });
+
+            // FIXED: Make unique agents using BOTH Name and Emp Code
+            // This prevents agents with 'NA' or empty codes (like Rajni and Rajendra) from overwriting each other
+            const agentMap = new Map();
+            rawData.forEach(r => {
+                const name = (r['Med Agent'] || 'Unknown').trim();
+                const code = (r['Med Agent Emp Code'] || 'NA').trim();
+                const uniqueKey = name + '|||' + code;
+                const displayKey = name + ' (' + code + ')';
+
+                if(!agentMap.has(uniqueKey)) {
+                    agentMap.set(uniqueKey, { 
+                        name: name, 
+                        code: code, 
+                        uniqueKey: uniqueKey, 
+                        displayKey: displayKey 
+                    });
+                }
+            });
+
+            const agents = Array.from(agentMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+            
+            const agentSelect = document.getElementById('agentSelect');
+            agentSelect.innerHTML = '';
+            
+            agents.forEach(a => {
+                let opt = document.createElement('option');
+                opt.value = a.uniqueKey; // Stores composite "Name|||Code"
+                opt.textContent = `👤 ${a.displayKey}`;
+                agentSelect.appendChild(opt);
+            });
+
+            // UI Switches
+            document.getElementById('filtersContainer').classList.remove('hidden');
+            document.getElementById('headerUploadBtn').classList.remove('hidden');
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+
+            dateSelect.addEventListener('change', updateDashboard);
+            agentSelect.addEventListener('change', updateDashboard);
+            
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            const agentSelectElem = document.getElementById('agentSelect');
+            if (!agentSelectElem.value) return;
+
+            const selectedUniqueKey = agentSelectElem.value;
+            const [agentName, agentCode] = selectedUniqueKey.split('|||');
+            
+            const agentText = agentSelectElem.options[agentSelectElem.selectedIndex].text.replace('👤 ', '');
+            const selectedDate = document.getElementById('dateSelect').value;
+            
+            document.getElementById('agentNameDisplay').textContent = agentText;
+            document.getElementById('agentAvatar').textContent = '👤';
+
+            // Filter accurately by both Name and Emp Code
+            let agentData = rawData.filter(r => {
+                const rName = (r['Med Agent'] || 'Unknown').trim();
+                const rCode = (r['Med Agent Emp Code'] || 'NA').trim();
+                return rName === agentName && rCode === agentCode;
+            });
+
+            if(selectedDate !== 'All') {
+                agentData = agentData.filter(r => r['Date'] === selectedDate);
+            }
+            
+            agentData.sort((a, b) => safeDate(a['Consult StartTime']) - safeDate(b['Consult StartTime']));
+            
+            let cp = 0, clinic = 0, call = 0;
+            let slaBreaches = 0, breaksTotalMins = 0;
+            let totalTatAllCases = 0, validTatCount = 0;
+            
+            let prevEnd = null;
+            let breakLabels = [];
+            let breakData = [];
+            let slaDetails = [];
+
+            agentData.forEach(row => {
+                let rType = (row['Type'] || '').toUpperCase();
+                if(rType === 'CP') cp++;
+                else if(rType === 'CLINIC') clinic++;
+                else if(rType === 'CALL') call++;
+
+                let appt = row['App Time'] || row['Appt Time'] || row['Appointment Time'];
+                let consultStart = row['Consult StartTime']; 
+                let consultEnd = row['Consult EndTime'];
+                let fbEnd = row['Immediate Feedback End Time'];
+
+                let caseTotalTime = diffInMins(appt, fbEnd);
+                if(caseTotalTime > 0 && caseTotalTime < 1440) {
+                    totalTatAllCases += caseTotalTime;
+                    validTatCount++;
+                }
+
+                let currentCaseEndTime = consultEnd || consultStart || appt;
+
+                if(caseTotalTime > 30 && caseTotalTime < 1440) {
+                    slaBreaches++;
+                    
+                    let agentTime = diffInMins(appt, consultStart);
+                    let docTime = diffInMins(consultStart, consultEnd);
+                    let pharmTime = diffInMins(consultEnd, fbEnd);
+
+                    slaDetails.push({
+                        emr: row['EMR #'],
+                        type: row['Type'] || 'Unknown',
+                        total: formatHoursMins(caseTotalTime),
+                        agent: formatHoursMins(agentTime),
+                        doc: formatHoursMins(docTime),
+                        pharm: formatHoursMins(pharmTime)
+                    });
+                }
+
+                if(appt) {
+                    if(prevEnd) {
+                        let gapMins = diffInMins(prevEnd, appt);
+                        if(gapMins > 15) {
+                            breaksTotalMins += gapMins;
+                            breakLabels.push(`${formatAmPm(prevEnd)} to ${formatAmPm(appt)}`);
+                            breakData.push(Math.round(gapMins));
+                        }
+                    }
+                    if(currentCaseEndTime) {
+                        prevEnd = currentCaseEndTime;
+                    }
+                }
+            });
+            
+            let regionCounts = {};
+            agentData.forEach(row => {
+                let rName = row['Region Name'] || 'Unknown';
+                if(!regionCounts[rName]) {
+                    regionCounts[rName] = { cp: 0, clinic: 0, call: 0, total: 0 };
+                }
+                
+                let rType = (row['Type'] || '').toUpperCase();
+                if(rType === 'CP') {
+                    regionCounts[rName].cp++;
+                    regionCounts[rName].total++;
+                }
+                else if(rType === 'CLINIC') {
+                    regionCounts[rName].clinic++;
+                    regionCounts[rName].total++;
+                }
+                else if(rType === 'CALL') {
+                    regionCounts[rName].call++;
+                    regionCounts[rName].total++;
+                }
+            });
+
+            const rBody = document.getElementById('regionTableBody');
+            const rHead = document.getElementById('regionTableHead');
+            let hasCallCases = call > 0;
+
+            if (hasCallCases) {
+                rHead.innerHTML = `
+                    <tr class="bg-slate-100 text-slate-600 uppercase text-xs font-black">
+                        <th class="p-3 rounded-tl-lg">Region Name</th>
+                        <th class="p-3 text-center">CP Cases</th>
+                        <th class="p-3 text-center">Clinic Cases</th>
+                        <th class="p-3 text-center">Call Cases</th>
+                        <th class="p-3 text-center rounded-tr-lg">Total</th>
+                    </tr>
+                `;
+            } else {
+                rHead.innerHTML = `
+                    <tr class="bg-slate-100 text-slate-600 uppercase text-xs font-black">
+                        <th class="p-3 rounded-tl-lg">Region Name</th>
+                        <th class="p-3 text-center">CP Cases</th>
+                        <th class="p-3 text-center">Clinic Cases</th>
+                        <th class="p-3 text-center rounded-tr-lg">Total</th>
+                    </tr>
+                `;
+            }
+
+            let rHtml = '';
+            let sortedRegions = Object.keys(regionCounts).sort((a,b) => regionCounts[b].total - regionCounts[a].total);
+            sortedRegions.forEach(r => {
+                let data = regionCounts[r];
+                if (hasCallCases) {
+                    rHtml += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                            <td class="p-3 font-black text-slate-800">${r}</td>
+                            <td class="p-3 text-center text-orange-600">${data.cp}</td>
+                            <td class="p-3 text-center text-blue-600">${data.clinic}</td>
+                            <td class="p-3 text-center text-green-600">${data.call}</td>
+                            <td class="p-3 text-center font-black">${data.total}</td>
+                        </tr>
+                    `;
+                } else {
+                    rHtml += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                            <td class="p-3 font-black text-slate-800">${r}</td>
+                            <td class="p-3 text-center text-orange-600">${data.cp}</td>
+                            <td class="p-3 text-center text-blue-600">${data.clinic}</td>
+                            <td class="p-3 text-center font-black">${data.total}</td>
+                        </tr>
+                    `;
+                }
+            });
+            if(rHtml === '') rHtml = `<tr><td colspan="${hasCallCases ? 5 : 4}" class="p-4 text-center text-slate-500 italic">No region data available</td></tr>`;
+            rBody.innerHTML = rHtml;
+
+            let firstCase = "N/A", lastCase = "N/A";
+
+            if(agentData.length > 0) {
+                let minDate = null;
+                let maxDate = null;
+                let firstCaseStr = null;
+                let lastCaseStr = null;
+
+                agentData.forEach(p => {
+                    let apptStr = p['App Time'] || p['Appt Time'] || p['Appointment Time'];
+                    let endStr = p['Consult EndTime'];
+                    
+                    let dAppt = safeDate(apptStr);
+                    let dEnd = safeDate(endStr);
+
+                    if(dAppt) {
+                        if(!minDate || dAppt < minDate) {
+                            minDate = dAppt;
+                            firstCaseStr = apptStr;
+                        }
+                    }
+                    if(dEnd) {
+                        if(!maxDate || dEnd > maxDate) {
+                            maxDate = dEnd;
+                            lastCaseStr = endStr;
+                        }
+                    }
+                });
+
+                firstCase = firstCaseStr ? formatAmPm(firstCaseStr) : "N/A";
+                lastCase = lastCaseStr ? formatAmPm(lastCaseStr) : "N/A";
+            }
+
+            let avgTatMins = validTatCount > 0 ? (totalTatAllCases / validTatCount) : 0;
+            document.getElementById('avgTat').textContent = formatHoursMins(avgTatMins);
+
+            document.getElementById('totalCases').textContent = agentData.length;
+            document.getElementById('cpCount').textContent = cp;
+            document.getElementById('clinicCount').textContent = clinic;
+            if(call > 0) {
+                document.getElementById('callCountDiv').classList.remove('hidden');
+                document.getElementById('callCount').textContent = call;
+            } else {
+                document.getElementById('callCountDiv').classList.add('hidden');
+            }
+            document.getElementById('firstLastTime').textContent = `${firstCase} - ${lastCase}`;
+
+            document.getElementById('breakTimeTotal').textContent = formatHoursMins(breaksTotalMins);
+            
+            if(breakLabels.length > 0) {
+                document.getElementById('noBreakMsg').classList.add('hidden');
+                document.getElementById('breakChart').classList.remove('hidden');
+                
+                const bCtx = document.getElementById('breakChart').getContext('2d');
+                if(breakChartInstance) breakChartInstance.destroy();
+                
+                breakChartInstance = new Chart(bCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: breakLabels,
+                        datasets: [{
+                            label: 'Break Duration',
+                            data: breakData,
+                            backgroundColor: (context) => {
+                                const chart = context.chart;
+                                const {ctx, chartArea} = chart;
+                                if (!chartArea) return '#eab308';
+                                const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                                gradient.addColorStop(0, '#b45309'); 
+                                gradient.addColorStop(1, '#fbbf24'); 
+                                return gradient;
+                            },
+                            borderRadius: 6,
+                            barThickness: 24,
+                            borderWidth: 1,
+                            borderColor: '#d97706',
+                            hoverBackgroundColor: '#fbbf24'
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: { padding: { right: 80 } },
+                        scales: {
+                            x: { display: false, beginAtZero: true },
+                            y: { 
+                                grid: { display: false }, 
+                                ticks: { color: '#334155', font: { weight: '800', size: 12 } } 
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            datalabels: {
+                                color: '#b45309',
+                                anchor: 'end',
+                                align: 'right',
+                                font: { weight: '900', size: 14 },
+                                formatter: (val) => formatHoursMins(val)
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                titleFont: {size: 14},
+                                bodyFont: {size: 14, weight: 'bold'},
+                                padding: 12,
+                                callbacks: {
+                                    label: function(context) {
+                                        return ' ' + formatHoursMins(context.raw);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                document.getElementById('breakChart').classList.add('hidden');
+                document.getElementById('noBreakMsg').classList.remove('hidden');
+            }
+
+            document.getElementById('slaBreachTotal').textContent = slaBreaches;
+            const slaUl = document.getElementById('slaList');
+            if(slaDetails.length > 0) {
+                slaUl.innerHTML = slaDetails.map(s => `
+                    <li class="inner-3d p-5 mb-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-center mb-4 border-b-2 border-slate-200 pb-3">
+                            <div class="flex items-center gap-3">
+                                <span class="font-extrabold text-slate-800 text-[16px]">EMR: <span class="text-[#1e3a8a]">${s.emr}</span></span>
+                                <span class="bg-white text-slate-700 px-2 py-1 rounded-md text-[11px] font-black border border-slate-300 uppercase shadow-sm">${s.type}</span>
+                            </div>
+                            <span class="bg-red-100 text-red-700 border-2 border-red-200 px-4 py-1.5 rounded-lg text-[14px] font-black shadow-inner">Total: ${s.total}</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="bg-white p-3 rounded-xl text-center border border-slate-200 shadow-[2px_2px_5px_rgba(0,0,0,0.05)]">
+                                <div class="text-[12px] text-slate-500 uppercase font-black mb-1">Agent</div>
+                                <div class="font-black text-slate-800 text-lg">${s.agent}</div>
+                            </div>
+                            <div class="bg-white p-3 rounded-xl text-center border border-slate-200 shadow-[2px_2px_5px_rgba(0,0,0,0.05)]">
+                                <div class="text-[12px] text-slate-500 uppercase font-black mb-1">Doctor</div>
+                                <div class="font-black text-slate-800 text-lg">${s.doc}</div>
+                            </div>
+                            <div class="bg-white p-3 rounded-xl text-center border border-slate-200 shadow-[2px_2px_5px_rgba(0,0,0,0.05)]">
+                                <div class="text-[12px] text-slate-500 uppercase font-black mb-1">Pharm</div>
+                                <div class="font-black text-slate-800 text-lg">${s.pharm}</div>
+                            </div>
+                        </div>
+                    </li>
+                `).join('');
+            } else {
+                slaUl.innerHTML = '<li class="text-slate-600 font-extrabold italic p-6 text-center mt-6 inner-3d text-lg">All cases handled under 30 mins! 🚀</li>';
+            }
+
+            let hourlyCounts = {7:0, 8:0, 9:0, 10:0, 11:0, 12:0, 13:0, 14:0, 15:0, 16:0, 17:0, 18:0};
+            agentData.forEach(row => {
+                if(row['Consult StartTime']) {
+                    let d = safeDate(row['Consult StartTime']);
+                    if(d) {
+                        let hour = d.getHours();
+                        if(hour >= 7 && hour <= 18) {
+                            hourlyCounts[hour]++;
+                        }
+                    }
+                }
+            });
+
+            const ctx = document.getElementById('hourlyChart').getContext('2d');
+            if(hourlyChartInstance) hourlyChartInstance.destroy();
+            
+            hourlyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['7 AM', '8 AM', '9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM'],
+                    datasets: [{
+                        label: 'Cases',
+                        data: Object.values(hourlyCounts),
+                        backgroundColor: (context) => {
+                            const chart = context.chart;
+                            const {ctx, chartArea} = chart;
+                            if (!chartArea) return '#1e3a8a';
+                            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                            gradient.addColorStop(0, '#0f172a'); 
+                            gradient.addColorStop(1, '#3b82f6'); 
+                            return gradient;
+                        },
+                        borderRadius: {topLeft: 8, topRight: 8, bottomLeft: 2, bottomRight: 2},
+                        borderWidth: 1,
+                        borderColor: '#1e40af',
+                        hoverBackgroundColor: '#f59e0b',
+                        boxShadow: '4px 4px 10px rgba(0,0,0,0.5)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 35 } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#e2e8f0', borderDash: [5, 5] }, ticks: { color: '#64748b', font: {weight: '900', size: 14} } },
+                        x: { grid: { display: false }, ticks: { color: '#334155', font: { weight: '900', size: 13 } } }
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        datalabels: {
+                            color: '#1e3a8a',
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 4,
+                            font: { weight: '900', size: 16 },
+                            formatter: (value) => value > 0 ? value : '',
+                            textShadowColor: 'rgba(0,0,0,0.1)',
+                            textShadowBlur: 4
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
